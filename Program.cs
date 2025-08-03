@@ -23,6 +23,11 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "TicTacToe API", Version = "v1" });
 });
+builder.Services.AddLogging(logging =>
+{
+    logging.SetMinimumLevel(LogLevel.Debug);
+    logging.AddConsole();
+});
 
 var app = builder.Build();
 

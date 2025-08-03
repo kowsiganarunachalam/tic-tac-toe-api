@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("tic-tac-toe-api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6a5fc4251d1a15f6a1186da97d2d9b85661d78d7")]
 [assembly: System.Reflection.AssemblyProductAttribute("tic-tac-toe-api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("tic-tac-toe-api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

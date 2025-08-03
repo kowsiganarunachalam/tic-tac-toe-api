@@ -36,3 +36,4 @@
 /home/gutz/Projects/tic-tac-toe-api/bin/Debug/net9.0/Swashbuckle.AspNetCore.Swagger.dll
 /home/gutz/Projects/tic-tac-toe-api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /home/gutz/Projects/tic-tac-toe-api/bin/Debug/net9.0/Swashbuckle.AspNetCore.SwaggerUI.dll
+/home/gutz/Projects/tic-tac-toe-api/obj/Debug/net9.0/tic-tac-toe-api.sourcelink.json
