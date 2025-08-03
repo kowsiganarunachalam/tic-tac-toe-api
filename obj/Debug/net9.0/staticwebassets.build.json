@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "+sghZtWPCkBLfHkm1pW+ApYruzpmsdmdPGIagFt4bqA=",
+  "Source": "tic-tac-toe-api",
+  "BasePath": "_content/tic-tac-toe-api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

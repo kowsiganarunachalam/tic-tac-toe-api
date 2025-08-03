@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/tic-tac-toe-api.props" />
+</Project>
