@@ -46,7 +46,7 @@ namespace tic_tac_toe_api
         }
 
         [HttpPost("join-room/{roomId}")]
-        public IActionResult JoinRoom(string roomId)
+        public async Task<IActionResult> JoinRoomAsync(string roomId)
         {
             if (!ActiveGames.TryGetValue(roomId, out var game))
                 return NotFound("Room not found.");
@@ -65,6 +65,8 @@ namespace tic_tac_toe_api
                 Expires = DateTimeOffset.UtcNow.AddHours(2)
             });
 
+            await _hubContext.Clients.Group(roomId)
+                    .SendAsync("PlayerJoined");
             return Ok(new { message = "Joined", roomId });
         }
 
@@ -105,7 +107,12 @@ namespace tic_tac_toe_api
             {
                 game.IsGameOver = true;
                 await _hubContext.Clients.Group(move.RoomId)
-                    .SendAsync("GameOver", expectedPlayerSymbol);
+                    .SendAsync("GameOver", new {
+                        player = expectedPlayerSymbol,
+                        row = move.Row,
+                        col = move.Col,
+                        nextTurn = game.CurrentTurn
+                    });
             }
             else
             {

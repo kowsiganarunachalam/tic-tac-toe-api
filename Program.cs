@@ -10,14 +10,18 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowLocalhost",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // or whatever your frontend port is
+            policy.WithOrigins("http://localhost:3000") // frontend origin
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
         });
-
 });
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -31,6 +35,7 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
+// ✅ Correct middleware order:
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -41,7 +46,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowLocalhost");
-app.MapControllers();
-app.MapHub<GameHub>("/gamehub");
+
+app.UseRouting();   // must come before session + endpoints
+app.UseSession();   // session hooked into pipeline
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapHub<GameHub>("/gamehub");
+});
 
 app.Run();
