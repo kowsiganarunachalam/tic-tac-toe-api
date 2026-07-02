@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/tic-tac-toe-api.props" />
-</Project>

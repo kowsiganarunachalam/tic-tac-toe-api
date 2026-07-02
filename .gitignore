@@ -1,0 +1,24 @@
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+.vscode/
+
+# Runtime artifacts
+errorlog/
+*.log
+
+# Local secrets (keep real connection strings out of Git)
+appsettings.Local.json
+secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
