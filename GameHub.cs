@@ -18,8 +18,11 @@ namespace tic_tac_toe_api
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         //private static readonly IConfiguration _configuration = configuration;
         private const string LogFolder = "errorlog";
-        private readonly GameDao gameDao = new(configuration.GetConnectionString("DefaultConnection")??""); 
-        private async Task LogErrorAsync(Exception ex, string methodName)
+        private readonly GameDao gameDao = new(configuration.GetConnectionString("DefaultConnection") ?? "");
+
+        private static readonly Random _random = new();
+
+        private static async Task LogErrorAsync(Exception ex, string methodName)
         {
             try
             {
@@ -31,7 +34,7 @@ namespace tic_tac_toe_api
                 string logFilePath = Path.Combine(LogFolder, $"error_{DateTime.UtcNow:yyyyMMdd}.log");
 
                 string logEntry = new StringBuilder()
-                    .AppendLine($"[{DateTime.UtcNow:O}] Error in {methodName}:")
+                    .AppendLine($"[{DateTime.Now:O}] Error in {methodName}:")
                     .AppendLine(ex.ToString())
                     .AppendLine("------------------------------------------------")
                     .ToString();
@@ -49,13 +52,13 @@ namespace tic_tac_toe_api
             try
             {
                 var roomId = Guid.NewGuid().ToString()[..6]; // short room code
-                Rooms[roomId] = new Game() { Player1 = Context.ConnectionId,Player1Name=playername };
+                Rooms[roomId] = new Game() { Player1 = Context.ConnectionId, Player1Name = playername };
 
-                
-                var playerOneDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
-                _dbIds[Context.ConnectionId] = playerOneDB;
+
+                //var playerOneDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
+                //_dbIds[Context.ConnectionId] = playerOneDB;
                 await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-                await Clients.Caller.SendAsync("RoomCreated", roomId,playername);
+                await Clients.Caller.SendAsync("RoomCreated", roomId, playername);
                 return roomId;
             }
             catch (Exception ex)
@@ -65,7 +68,7 @@ namespace tic_tac_toe_api
             }
         }
 
-        public async Task<bool> JoinRoom(string roomId,string playername)
+        public async Task<bool> JoinRoom(string roomId, string playername)
         {
             try
             {
@@ -78,16 +81,16 @@ namespace tic_tac_toe_api
                     }
 
                     game.Player2 = Context.ConnectionId;
-                    game.Player2Name=playername;
+                    game.Player2Name = playername;
                     await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-                    
-                    await Clients.Group(roomId).SendAsync("StartGame", roomId,game.Player1Name,game.Player2Name,JsonConvert.SerializeObject(game));
-                    var playerTwoDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
-                    _dbIds[Context.ConnectionId] = playerTwoDB;
-                    var roomIdDb = await gameDao.InsertRoom(_dbIds[game.Player1],roomId);
-                    _dbIds["roomIdDb"]=roomIdDb;
-                    _ = await gameDao.InsertIntoRoom(_dbIds[game.Player1],roomIdDb);
-                    _ = await gameDao.InsertIntoRoom(_dbIds[game.Player2],roomIdDb);
+
+                    await Clients.Group(roomId).SendAsync("StartGame", roomId, game.Player1Name, game.Player2Name, JsonConvert.SerializeObject(game));
+                    //var playerTwoDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
+                    //_dbIds[Context.ConnectionId] = playerTwoDB;
+                    //var roomIdDb = await gameDao.InsertRoom(_dbIds[game.Player1],roomId);
+                    // _dbIds["roomIdDb"]=roomIdDb;
+                    //_ = await gameDao.InsertIntoRoom(_dbIds[game.Player1],roomIdDb);
+                    //_ = await gameDao.InsertIntoRoom(_dbIds[game.Player2],roomIdDb);
                     return true;
                 }
 
@@ -107,21 +110,21 @@ namespace tic_tac_toe_api
             {
                 if (!Rooms.TryGetValue(roomId, out var game))
                 {
-                    await Clients.Caller.SendAsync("Alert","Error", "Room not found.");
+                    await Clients.Caller.SendAsync("Alert", "Error", "Room not found.");
                     return;
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(game.Player2))
                     {
-                        await Clients.Caller.SendAsync("Alert","Info", "Player 2 needs to join.");
+                        await Clients.Caller.SendAsync("Alert", "Info", "Player 2 needs to join.");
                         return;
                     }
                 }
 
                 if (game.IsGameOver)
                 {
-                    await Clients.Caller.SendAsync("Alert","Info", "Game is already over.");
+                    await Clients.Caller.SendAsync("Alert", "Info", "Game is already over.");
                     return;
                 }
 
@@ -130,20 +133,20 @@ namespace tic_tac_toe_api
 
                 if (expectedPlayerSymbol != game.CurrentTurn)
                 {
-                    await Clients.Caller.SendAsync("Alert","Warning", "Not your turn.");
+                    await Clients.Caller.SendAsync("Alert", "Warning", "Not your turn.");
                     return;
                 }
 
                 // Validate move bounds
                 if (row < 0 || row > 2 || col < 0 || col > 2)
                 {
-                    await Clients.Caller.SendAsync("Alert","Warning", "Invalid position.");
+                    await Clients.Caller.SendAsync("Alert", "Warning", "Invalid position.");
                     return;
                 }
 
                 if (game.Board[row, col] != null)
                 {
-                    await Clients.Caller.SendAsync("Alert","Warning", "Invalid move. Cell already taken.");
+                    await Clients.Caller.SendAsync("Alert", "Warning", "Invalid move. Cell already taken.");
                     return;
                 }
 
@@ -162,8 +165,8 @@ namespace tic_tac_toe_api
                         col,
                         nextTurn = game.CurrentTurn
                     });
-                    _ = gameDao.InsertMatchDetails(_dbIds["roomIdDb"],_dbIds[Context.ConnectionId]);
-                    
+                    //_ = gameDao.InsertMatchDetails(_dbIds["roomIdDb"],_dbIds[Context.ConnectionId]);
+
                 }
                 else
                 {
@@ -184,6 +187,38 @@ namespace tic_tac_toe_api
                 await LogErrorAsync(ex, nameof(MakeMove));
                 await Clients.Caller.SendAsync("Error", "An unexpected error occurred.");
             }
+        }
+
+        public async Task AutoMoveIfNotChose(string roomId, string player)
+        {
+            try
+            {
+                var board = Rooms[roomId].Board;
+                var notExistIndices = (from i in Enumerable.Range(0, board.GetLength(0))
+                                       from j in Enumerable.Range(0, board.GetLength(1))
+                                       where string.IsNullOrEmpty(board[i, j])
+                                       select (i, j)).ToList();
+                var index = _random.Next(0, notExistIndices.Count);
+
+                Rooms[roomId].Board[notExistIndices[index].i, notExistIndices[index].j] = player;
+
+                Rooms[roomId].CurrentTurn = Rooms[roomId].CurrentTurn == "X" ? "O" : "X";
+
+                await Clients.Group(roomId).SendAsync("ReceiveMove", new
+                {
+                    player,
+                    row=notExistIndices[index].i,
+                    col=notExistIndices[index].j,
+                    nextTurn = Rooms[roomId].CurrentTurn
+                });
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync(ex, nameof(AutoMoveIfNotChose));
+                await Clients.Caller.SendAsync("Error", "An unexpected error occurred.");
+            }
+
+
         }
 
 
@@ -225,5 +260,6 @@ namespace tic_tac_toe_api
             return (board[0, 0] == symbol && board[1, 1] == symbol && board[2, 2] == symbol) ||
                    (board[0, 2] == symbol && board[1, 1] == symbol && board[2, 0] == symbol);
         }
+
     }
 }

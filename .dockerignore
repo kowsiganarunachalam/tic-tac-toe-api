@@ -1,0 +1,8 @@
+bin/
+obj/
+publish/
+errorlog/
+.vscode/
+.git/
+*.sql
+*.md
