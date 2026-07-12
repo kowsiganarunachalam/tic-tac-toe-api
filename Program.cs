@@ -26,6 +26,8 @@ if (!string.IsNullOrEmpty(databaseUrl))
     builder.Configuration["ConnectionStrings:DefaultConnection"] = npgsqlConnectionString;
 }
 
+builder.WebHost.UseUrls("http://0.0.0.0:" + (Environment.GetEnvironmentVariable("PORT") ?? "10000"));
+
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
