@@ -41,7 +41,7 @@ builder.Services.AddCors(options =>
     {
         policy
             .WithOrigins(
-                "https://tic-tac-toe-jekf.onrender.com",
+                "https://tic-tac-toe-egyq.onrender.com",
                 "http://localhost:3000"
             )
             .AllowAnyHeader()
