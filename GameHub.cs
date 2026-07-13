@@ -55,8 +55,8 @@ namespace tic_tac_toe_api
                 Rooms[roomId] = new Game() { Player1 = Context.ConnectionId, Player1Name = playername };
 
 
-                //var playerOneDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
-                //_dbIds[Context.ConnectionId] = playerOneDB;
+                var playerOneDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
+                _dbIds[Context.ConnectionId] = playerOneDB;
                 await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
                 await Clients.Caller.SendAsync("RoomCreated", roomId, playername);
                 return roomId;
@@ -85,12 +85,12 @@ namespace tic_tac_toe_api
                     await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
                     await Clients.Group(roomId).SendAsync("StartGame", roomId, game.Player1Name, game.Player2Name, JsonConvert.SerializeObject(game));
-                    //var playerTwoDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
-                    //_dbIds[Context.ConnectionId] = playerTwoDB;
-                    //var roomIdDb = await gameDao.InsertRoom(_dbIds[game.Player1],roomId);
-                    // _dbIds["roomIdDb"]=roomIdDb;
-                    //_ = await gameDao.InsertIntoRoom(_dbIds[game.Player1],roomIdDb);
-                    //_ = await gameDao.InsertIntoRoom(_dbIds[game.Player2],roomIdDb);
+                    var playerTwoDB = await gameDao.InsertPlayer(Context.ConnectionId,playername);
+                    _dbIds[Context.ConnectionId] = playerTwoDB;
+                    var roomIdDb = await gameDao.InsertRoom(_dbIds[game.Player1],roomId);
+                    _dbIds["roomIdDb"]=roomIdDb;
+                    _ = await gameDao.InsertIntoRoom(_dbIds[game.Player1],roomIdDb);
+                    _ = await gameDao.InsertIntoRoom(_dbIds[game.Player2],roomIdDb);
                     return true;
                 }
 
@@ -165,7 +165,7 @@ namespace tic_tac_toe_api
                         col,
                         nextTurn = game.CurrentTurn
                     });
-                    //_ = gameDao.InsertMatchDetails(_dbIds["roomIdDb"],_dbIds[Context.ConnectionId]);
+                    _ = gameDao.InsertMatchDetails(_dbIds["roomIdDb"],_dbIds[Context.ConnectionId]);
 
                 }
                 else
