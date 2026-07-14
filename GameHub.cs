@@ -221,6 +221,43 @@ namespace tic_tac_toe_api
 
         }
 
+        public async Task PlayAgain(string roomId)
+        {
+            try
+            {
+                if (!Rooms.TryGetValue(roomId, out var game))
+                {
+                    await Clients.Caller.SendAsync("Alert", "Error", "Room not found.");
+                    return;
+                }
+
+                if (game.Player1 != Context.ConnectionId && game.Player2 != Context.ConnectionId)
+                {
+                    await Clients.Caller.SendAsync("Alert", "Error", "You are not part of this room.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(game.Player1) || string.IsNullOrEmpty(game.Player2))
+                {
+                    await Clients.Caller.SendAsync("Alert", "Info", "Waiting for both players to be in the room.");
+                    return;
+                }
+
+                game.Board = new string[3, 3];
+                game.CurrentTurn = "X";
+                game.IsGameOver = false;
+                game.AutoMoveDone = false;
+                game.TurnStartedAt = DateTime.UtcNow;
+
+                await Clients.Group(roomId).SendAsync("StartGame", roomId, game.Player1Name, game.Player2Name, JsonConvert.SerializeObject(game));
+            }
+            catch (Exception ex)
+            {
+                await LogErrorAsync(ex, nameof(PlayAgain));
+                await Clients.Caller.SendAsync("Error", "An unexpected error occurred.");
+            }
+        }
+
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
